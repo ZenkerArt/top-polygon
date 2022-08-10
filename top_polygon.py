@@ -101,7 +101,10 @@ class TOP_OT_top(bpy.types.Operator):
             item.polycount = len(i.data.polygons)
 
     def execute(self, context: bpy.types.Context):
-        self.calc_count(context, self.count)
+        if self.count < 6:
+            self.calc_count(context, self.count)
+        else:
+            self.calc_polygon(context)
         return {'FINISHED'}
 
 
@@ -122,6 +125,10 @@ class TOP_PT_object_list(BasePanel, bpy.types.Panel):
         o = layout.operator(TOP_OT_top.bl_idname,
                             text='Посчитать Полигоны')
         o.count = 4
+
+        o = layout.operator(TOP_OT_top.bl_idname,
+                            text='Посчитать Общее')
+        o.count = 999
 
 
 reg, unreg = bpy.utils.register_classes_factory((
