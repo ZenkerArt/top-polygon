@@ -61,8 +61,30 @@ class TOP_UL_top_props(bpy.types.UIList):
 class TOP_OT_top(bpy.types.Operator):
     bl_idname: str = 'top.calc_top'
     bl_label: str = 'Calc top'
+    count: bpy.props.IntProperty()
 
-    def execute(self, context: bpy.types.Context):
+    def calc_count(self, context, count):
+        scene = context.scene
+        scene.top_object.clear()
+        dg = context.evaluated_depsgraph_get()
+
+        for i in bpy.data.objects:
+            if not isinstance(i.data, Mesh):
+                continue
+
+            if scene.top_settings.modify:
+                i = i.evaluated_get(dg)
+
+            item = scene.top_object.add()
+            item.name = i.name
+            counter = 0
+            for p in i.data.polygons:
+                if len(p.vertices) == self.count:
+                    counter += 1
+
+            item.polycount = counter
+
+    def calc_polygon(self, context):
         scene = context.scene
         scene.top_object.clear()
         dg = context.evaluated_depsgraph_get()
@@ -77,6 +99,9 @@ class TOP_OT_top(bpy.types.Operator):
             item = scene.top_object.add()
             item.name = i.name
             item.polycount = len(i.data.polygons)
+
+    def execute(self, context: bpy.types.Context):
+        self.calc_count(context, self.count)
         return {'FINISHED'}
 
 
@@ -90,7 +115,13 @@ class TOP_PT_object_list(BasePanel, bpy.types.Panel):
         layout.template_list('TOP_UL_top_props', '',
                              scene, 'top_object', scene, 'top_object_active')
 
-        layout.operator(TOP_OT_top.bl_idname, text='Посчитать')
+        o = layout.operator(TOP_OT_top.bl_idname,
+                            text='Посчитать Треугольники')
+        o.count = 3
+
+        o = layout.operator(TOP_OT_top.bl_idname,
+                            text='Посчитать Полигоны')
+        o.count = 4
 
 
 reg, unreg = bpy.utils.register_classes_factory((
